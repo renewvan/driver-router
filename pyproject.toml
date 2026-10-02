@@ -1,0 +1,22 @@
+[project]
+name = "node-router"
+version = "0.1.0"
+description = "RUT-360 Data to Server MQTT -> renewvan-bus router remap node"
+requires-python = ">=3.11"
+dependencies = [
+    "paho-mqtt>=1.6,<2",
+]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["node_router*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W"]
