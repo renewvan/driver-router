@@ -41,7 +41,12 @@ def connect(publisher: Publisher) -> FakeClient:
 
 def test_info_is_published_retained_immediately_before_online(publisher: Publisher) -> None:
     client = connect(publisher)
-    assert client.published == [(INFO_TOPIC, INFO, True), (HEALTH_TOPIC, "online", True)]
+    # Literal wire topics: the dashboard's uplink icon reads renewvan/router/health
+    # (bare online/offline) until it moves to the node registry, so it must not change.
+    assert client.published == [
+        ("renewvan/router/info", INFO, True),
+        ("renewvan/router/health", "online", True),
+    ]
 
 
 def test_info_is_published_again_on_every_reconnect(publisher: Publisher) -> None:
@@ -64,9 +69,3 @@ def test_info_is_never_cleared_when_the_node_goes_offline(publisher: Publisher) 
     assert client.published == [(HEALTH_TOPIC, "offline", True)]
     # the broker publishes the last will on an unclean death: offline on health only
     assert client.will == (HEALTH_TOPIC, "offline", True)
-
-
-def test_health_topic_is_unchanged() -> None:
-    # The dashboard's uplink icon reads this topic until it moves to the node registry.
-    assert HEALTH_TOPIC == "renewvan/router/health"
-    assert INFO_TOPIC == "renewvan/router/info"

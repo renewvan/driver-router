@@ -19,14 +19,14 @@ class StubPublisher:
     def subscribe(self, topic, callback) -> None: ...
 
 
-def run_node(monkeypatch, node_version: str | None) -> dict:
+def run_node(monkeypatch, node_version: str | None, host_serial: str | None = None) -> dict:
     StubPublisher.instances.clear()
     if node_version is None:
         monkeypatch.delenv("NODE_VERSION", raising=False)
     else:
         monkeypatch.setenv("NODE_VERSION", node_version)
     monkeypatch.setattr(main_module, "Publisher", StubPublisher)
-    monkeypatch.setattr(main_module, "read_host_serial", lambda: None)
+    monkeypatch.setattr(main_module, "read_host_serial", lambda: host_serial)
     config = AppConfig(mqtt=MqttConfig("localhost", 1883, None, None), router_id="main")
     monkeypatch.setattr(main_module, "load_config", lambda: config)
     main_module.run()
@@ -41,3 +41,11 @@ def test_run_stamps_node_version_env_into_published_info(monkeypatch) -> None:
 
 def test_run_reports_dev_when_node_version_is_unset(monkeypatch) -> None:
     assert run_node(monkeypatch, None)["version"] == "dev"
+
+
+def test_run_publishes_the_host_serial_when_known(monkeypatch) -> None:
+    assert run_node(monkeypatch, "v1", "00000000a1b2c3d4")["host_serial"] == "00000000a1b2c3d4"
+
+
+def test_run_omits_host_serial_when_unknown(monkeypatch) -> None:
+    assert "host_serial" not in run_node(monkeypatch, "v1", None)

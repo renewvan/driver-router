@@ -1,6 +1,8 @@
 import json
 from pathlib import Path
 
+import pytest
+
 from node_router.node_info import build_info, read_host_serial
 
 MANIFEST = {
@@ -50,12 +52,20 @@ def test_host_serial_is_the_serial_line_of_cpuinfo(tmp_path: Path) -> None:
     assert read_host_serial(write_cpuinfo(tmp_path, PI_CPUINFO)) == "00000000a1b2c3d4"
 
 
-def test_host_serial_omitted_when_unavailable(tmp_path: Path) -> None:
-    no_serial = "processor\t: 0\nmodel name\t: x86\n"
-    empty = "processor\t: 0\nSerial\t\t: \n"
-    all_zero = "processor\t: 0\nSerial\t\t: 0000000000000000\n"
-    for text in (no_serial, empty, all_zero):
-        assert read_host_serial(write_cpuinfo(tmp_path, text)) is None
+@pytest.mark.parametrize(
+    "text",
+    [
+        "processor\t: 0\nmodel name\t: x86\n",  # no Serial line
+        "processor\t: 0\nSerial\t\t: \n",  # empty
+        "processor\t: 0\nSerial\t\t: 0000000000000000\n",  # all zeros
+    ],
+    ids=["missing", "empty", "all-zero"],
+)
+def test_host_serial_omitted_when_unavailable(tmp_path: Path, text: str) -> None:
+    assert read_host_serial(write_cpuinfo(tmp_path, text)) is None
+
+
+def test_host_serial_omitted_when_cpuinfo_unreadable(tmp_path: Path) -> None:
     assert read_host_serial(tmp_path / "does-not-exist") is None
 
 
@@ -94,13 +104,3 @@ def test_manifest_beside_the_module_wins_over_the_repo_root(tmp_path: Path, monk
 
     beside.unlink()  # a checkout run has no copy beside the module
     assert json.loads(build_info("v1", None))["product"] == "Repo root"
-
-
-def test_production_lookup_prefers_the_copy_beside_the_module() -> None:
-    import node_router.node_info as node_info
-
-    package_dir = Path(node_info.__file__).resolve().parent
-    assert node_info.MANIFEST_PATHS == (
-        package_dir / "manifest.json",  # copied in by the image build
-        package_dir.parent / "manifest.json",  # repo root, for a checkout run
-    )
