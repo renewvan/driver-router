@@ -1,0 +1,8 @@
+{
+  "node": "router",
+  "product": "Teltonika RUT-360 router",
+  "source": "RutOS Data to Server MQTT push feed",
+  "publishes": ["router"],
+  "manufacturer": "renewvan",
+  "homepage": "https://github.com/renewvan/node-router"
+}

@@ -5,10 +5,26 @@ from __future__ import annotations
 
 import argparse
 import logging
+import os
 
 from node_router.config import load_config
+from node_router.node_info import build_info, read_host_serial
 from node_router.publisher import Publisher
 from node_router.subscriber import Subscriber
+
+
+def run() -> None:
+    config = load_config()
+    # Version is stamped by the release build (NODE_VERSION); unset reports "dev".
+    # Host serial is read once, here, at process start.
+    info = build_info(os.environ.get("NODE_VERSION"), read_host_serial())
+    publisher = Publisher(config.mqtt, info)
+    Subscriber(config, publisher)
+    publisher.connect()
+    try:
+        publisher.run_forever()
+    finally:
+        publisher.disconnect()
 
 
 def main() -> None:
@@ -23,14 +39,7 @@ def main() -> None:
         format="%(asctime)s %(levelname)-8s %(message)s",
     )
 
-    config = load_config()
-    publisher = Publisher(config.mqtt)
-    Subscriber(config, publisher)
-    publisher.connect()
-    try:
-        publisher.run_forever()
-    finally:
-        publisher.disconnect()
+    run()
 
 
 if __name__ == "__main__":

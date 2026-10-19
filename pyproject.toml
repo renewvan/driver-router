@@ -1,6 +1,8 @@
 [project]
 name = "node-router"
-version = "0.1.0"
+# Fixed placeholder: nothing reads this. The git release tag is the only version
+# source (stamped into the image as NODE_VERSION).
+version = "0.0.0"
 description = "RUT-360 Data to Server MQTT -> renewvan-bus router remap node"
 requires-python = ">=3.11"
 dependencies = [
