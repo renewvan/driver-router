@@ -1,5 +1,5 @@
 """Config sourced from environment variables — matches `hub`'s
-`docker-compose.yml` `node-router:` service block, the contract between this
+`docker-compose.yml` `driver-router:` service block, the contract between this
 repo and the deployment manifest. One MQTT connection: the hub bus carries
 both the RUT's raw feed (subscribe) and the normalized publishes.
 """

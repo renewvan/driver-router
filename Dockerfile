@@ -5,12 +5,12 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY node_router/ node_router/
-# Beside the module, where node_info.py looks first (a checkout run uses the repo-root file).
-COPY manifest.json node_router/manifest.json
+COPY driver_router/ driver_router/
+# Beside the module, where device_info.py looks first (a checkout run uses the repo-root file).
+COPY manifest.json driver_router/manifest.json
 
 # The release workflow passes the git release tag. Unset (a local build) reports "dev".
-ARG NODE_VERSION
-ENV NODE_VERSION=${NODE_VERSION}
+ARG DEVICE_VERSION
+ENV DEVICE_VERSION=${DEVICE_VERSION}
 
-ENTRYPOINT ["python", "-m", "node_router.main"]
+ENTRYPOINT ["python", "-m", "driver_router.main"]

@@ -1,7 +1,7 @@
 """Persistent MQTT connection to the renewvan bus — the single connection
-this node uses (raw subscribe in, normalized publishes out). LWT on the
+this device uses (raw subscribe in, normalized publishes out). LWT on the
 router health topic, retained publishes, and callback subscriptions that
-survive reconnects. Same shape as node-tank's publisher.py.
+survive reconnects. Same shape as driver-tank's publisher.py.
 """
 
 from __future__ import annotations
@@ -12,7 +12,7 @@ from typing import Callable
 
 import paho.mqtt.client as mqtt
 
-from node_router.config import MqttConfig
+from driver_router.config import MqttConfig
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +24,7 @@ class Publisher:
     def __init__(self, config: MqttConfig, info: str) -> None:
         self._config = config
         self._info = info
-        self._client = mqtt.Client(client_id="node-router", clean_session=False)
+        self._client = mqtt.Client(client_id="driver-router", clean_session=False)
         if config.username:
             self._client.username_pw_set(config.username, config.password)
         self._client.will_set(HEALTH_TOPIC, payload="offline", qos=1, retain=True)

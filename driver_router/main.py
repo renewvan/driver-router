@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""node-router entrypoint."""
+"""driver-router entrypoint."""
 
 from __future__ import annotations
 
@@ -7,17 +7,17 @@ import argparse
 import logging
 import os
 
-from node_router.config import load_config
-from node_router.node_info import build_info, read_host_serial
-from node_router.publisher import Publisher
-from node_router.subscriber import Subscriber
+from driver_router.config import load_config
+from driver_router.device_info import build_info, read_board_serial
+from driver_router.publisher import Publisher
+from driver_router.subscriber import Subscriber
 
 
 def run() -> None:
     config = load_config()
-    # Version is stamped by the release build (NODE_VERSION); unset reports "dev".
-    # Host serial is read once, here, at process start.
-    info = build_info(os.environ.get("NODE_VERSION"), read_host_serial())
+    # Version is stamped by the release build (DEVICE_VERSION); unset reports "dev".
+    # Board serial is read once, here, at process start.
+    info = build_info(os.environ.get("DEVICE_VERSION"), read_board_serial())
     publisher = Publisher(config.mqtt, info)
     Subscriber(config, publisher)
     publisher.connect()
@@ -29,7 +29,7 @@ def run() -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="node-router: RUT-360 Data to Server MQTT -> renewvan-bus router remap"
+        description="driver-router: RUT-360 Data to Server MQTT -> renewvan-bus router remap"
     )
     parser.add_argument("-d", "--debug", action="store_true", help="Enable debug logging")
     args = parser.parse_args()

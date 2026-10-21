@@ -1,5 +1,5 @@
 """Subscription of the RUT's raw Data to Server topic on the hub bus and
-republish of the mapped, retained properties over the same node's Publisher.
+republish of the mapped, retained properties over the same device's Publisher.
 
 Thin I/O adapter around paho-mqtt; not unit-tested (see mapping.py for the
 tested seam).
@@ -10,9 +10,9 @@ from __future__ import annotations
 import json
 import logging
 
-from node_router.config import AppConfig
-from node_router.mapping import map_raw
-from node_router.publisher import Publisher
+from driver_router.config import AppConfig
+from driver_router.mapping import map_raw
+from driver_router.publisher import Publisher
 
 logger = logging.getLogger(__name__)
 

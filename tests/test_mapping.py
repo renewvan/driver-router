@@ -6,7 +6,7 @@ Expected values come from the settled field list
 real captured payload, not from re-reading the mapping code.
 """
 
-from node_router.mapping import map_raw
+from driver_router.mapping import map_raw
 from tests.fixtures import rut as fx
 
 ROUTER_ID = "main"

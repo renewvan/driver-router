@@ -1,10 +1,10 @@
 import pytest
 
-import node_router.publisher as publisher_module
-from node_router.config import MqttConfig
-from node_router.publisher import HEALTH_TOPIC, INFO_TOPIC, Publisher
+import driver_router.publisher as publisher_module
+from driver_router.config import MqttConfig
+from driver_router.publisher import HEALTH_TOPIC, INFO_TOPIC, Publisher
 
-INFO = '{"node": "router", "version": "v1"}'
+INFO = '{"device": "router", "version": "v1"}'
 
 
 class FakeClient:
@@ -42,7 +42,7 @@ def connect(publisher: Publisher) -> FakeClient:
 def test_info_is_published_retained_immediately_before_online(publisher: Publisher) -> None:
     client = connect(publisher)
     # Literal wire topics: the dashboard's uplink icon reads renewvan/router/health
-    # (bare online/offline) until it moves to the node registry, so it must not change.
+    # (bare online/offline) until it moves to the device registry, so it must not change.
     assert client.published == [
         ("renewvan/router/info", INFO, True),
         ("renewvan/router/health", "online", True),
@@ -62,7 +62,7 @@ def test_failed_connect_publishes_nothing(publisher: Publisher) -> None:
     assert client.published == []
 
 
-def test_info_is_never_cleared_when_the_node_goes_offline(publisher: Publisher) -> None:
+def test_info_is_never_cleared_when_the_device_goes_offline(publisher: Publisher) -> None:
     client = connect(publisher)
     client.published.clear()
     publisher.disconnect()
