@@ -3,15 +3,15 @@ from pathlib import Path
 
 import pytest
 
-from driver_router.device_info import build_info, read_board_serial
+from driver_router.driver_info import build_info, read_board_serial
 
 MANIFEST = {
-    "device": "router",
+    "driver": "router",
     "product": "Test product",
     "source": "Test source",
     "publishes": ["router"],
     "manufacturer": "Acme",
-    "homepage": "https://example.com/device",
+    "homepage": "https://example.com/driver",
 }
 
 
@@ -91,7 +91,7 @@ def test_default_manifest_is_the_repo_root_file_in_a_checkout() -> None:
 
 
 def test_manifest_beside_the_module_wins_over_the_repo_root(tmp_path: Path, monkeypatch) -> None:
-    import driver_router.device_info as device_info
+    import driver_router.driver_info as driver_info
 
     beside = write_manifest(tmp_path, {**MANIFEST, "product": "Image copy"})
     root_dir = tmp_path / "root"
@@ -99,7 +99,7 @@ def test_manifest_beside_the_module_wins_over_the_repo_root(tmp_path: Path, monk
     root = root_dir / "manifest.json"
     root.write_text(json.dumps({**MANIFEST, "product": "Repo root"}))
 
-    monkeypatch.setattr(device_info, "MANIFEST_PATHS", (beside, root))
+    monkeypatch.setattr(driver_info, "MANIFEST_PATHS", (beside, root))
     assert json.loads(build_info("v1", None))["product"] == "Image copy"
 
     beside.unlink()  # a checkout run has no copy beside the module

@@ -8,17 +8,17 @@ import logging
 import os
 
 from driver_router.config import load_config
-from driver_router.device_info import build_info, read_board_serial
+from driver_router.driver_info import build_info, read_board_serial
 from driver_router.publisher import Publisher
 from driver_router.subscriber import Subscriber
 
 
 def run() -> None:
     config = load_config()
-    # Version is stamped by the release build (DEVICE_VERSION); unset reports "dev".
+    # Version is stamped by the release build (DRIVER_VERSION); unset reports "dev".
     # Board serial is read once, here, at process start.
-    info = build_info(os.environ.get("DEVICE_VERSION"), read_board_serial())
-    publisher = Publisher(config.mqtt, info)
+    info = build_info(os.environ.get("DRIVER_VERSION"), read_board_serial())
+    publisher = Publisher(config.mqtt, info, config.router_id)
     Subscriber(config, publisher)
     publisher.connect()
     try:

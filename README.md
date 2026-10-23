@@ -15,16 +15,20 @@ The hub bus carries both directions on a single connection:
   (`{input:{…}}` keyed by input name).
 - **Publish** (retained, JSON-encoded scalars) `renewvan/router/<id>/<property>`
   per the [router schema](https://renewvan.dev/schema/router.schema.json),
-  plus device liveness on `renewvan/router/health` (`online`/`offline` via MQTT
+  plus driver liveness on `renewvan/router/health` (`online`/`offline` via MQTT
   LWT) — deliberately 3 segments, not 4, so it can't be mistaken for a
   `router` entity keyed by a fake `health` id.
-- **Device info:** `renewvan/router/info` — one retained JSON message
-  describing this Device (see [Device info](#device-info)). Published on **every
-  connect, immediately before `online`**, so a consumer that sees `online`
+- **Driver info:** `renewvan/router/info` — one retained JSON message
+  describing this Driver (see [Driver info](#driver-info)). Published on **every
+  connect, before `online`**, so a consumer that sees `online`
   always finds info already retained. It is **never cleared**: it stays
-  retained when the Device goes offline or its last will fires, which is what
+  retained when the Driver goes offline or its last will fires, which is what
   lets a consumer show "offline, last seen vX". `renewvan/router/health` is
   unchanged: a bare `online`/`offline`.
+- **Instance driver:** `renewvan/router/<id>/driver` — retained JSON string
+  `"router"` (this Driver's key), naming the Driver that owns the router
+  instance. The push feed only carries live readings, so it is (re)published on
+  every connect, between `info` and `online`, for the configured `ROUTER_ID`.
 
 ## Mapping
 
@@ -89,27 +93,27 @@ ticked. It runs the tests, publishes only its own tag (never `:latest`) and writ
 to `main`. The process is shared by every renewvan repo and lives in `hub` (`hub/docs/adr/0015-one-release-process-via-reusable-workflows.md`);
 this repo's `release.yml` only says what it ships.
 
-The release workflow passes the tag as the `DEVICE_VERSION` build argument, which
-the Dockerfile promotes to an environment variable the device reads (see
-[Device info](#device-info)). Nothing else carries a version.
+The release workflow passes the tag as the `DRIVER_VERSION` build argument, which
+the Dockerfile promotes to an environment variable the driver reads (see
+[Driver info](#driver-info)). Nothing else carries a version.
 
-## Device info
+## Driver info
 
-The Device describes itself to the dashboard with a manifest plus two runtime
-values. Contract: `hub`'s `schema/device-info.schema.json` (decision record:
+The Driver describes itself to the dashboard with a manifest plus two runtime
+values. Contract: `hub`'s `schema/driver-info.schema.json` (decision record:
 `hub/docs/adr/0011-node-manifest-and-retained-info-topic.md`).
 
 **`manifest.json`** (repo root) is the single source of the static fields:
-`device` (`router`, the topic key), `product`, `source`, `publishes`, and
+`driver` (`router`, the topic key), `product`, `source`, `publishes`, and
 optional `manufacturer` / `homepage`. `version` and `board_serial` are
 **forbidden** in it. The image build copies it beside the module
-(`driver_router/manifest.json`); the Device reads that copy first and falls back
+(`driver_router/manifest.json`); the Driver reads that copy first and falls back
 to the repo-root file for a checkout run.
 
 **`version`** comes from the git release tag and nowhere else. The release
-workflow passes it as the `DEVICE_VERSION` build argument, which becomes an
-environment variable the Device reads. When `DEVICE_VERSION` is unset or empty (a
-checkout run, a local `docker build`) the Device reports the literal **`dev`**.
+workflow passes it as the `DRIVER_VERSION` build argument, which becomes an
+environment variable the Driver reads. When `DRIVER_VERSION` is unset or empty (a
+checkout run, a local `docker build`) the Driver reports the literal **`dev`**.
 There is no `version` file or `__version__`, and the `pyproject.toml` version
 is a fixed placeholder nothing reads.
 
@@ -118,16 +122,16 @@ at start. A default container can read it, so no compose or Dockerfile mount
 change is needed. It is **omitted** (never faked, never `unknown`) when the
 file is unreadable, the line is missing or empty, or the value is all zeros.
 
-`driver_router/device_info.py` is a small helper deliberately **copied** into each
-Python device repo rather than shared as a package, so each Device releases
+`driver_router/driver_info.py` is a small helper deliberately **copied** into each
+Python driver repo rather than shared as a package, so each Driver releases
 independently.
 
 **CI gate:** `.github/workflows/manifest.yml` calls hub's reusable manifest workflow,
-which validates `manifest.json` against `device-manifest.schema.json` at a **pinned hub
+which validates `manifest.json` against `driver-manifest.schema.json` at a **pinned hub
 commit** (`hub-ref`, the same SHA the workflow is pinned with) and fails if a manifest
 containing `version` is accepted. Bump both together to adopt a newer contract. To check
 locally:
 
 ```bash
-npx --yes ajv-cli@5 validate -s path/to/hub/schema/device-manifest.schema.json -d manifest.json
+npx --yes ajv-cli@5 validate -s path/to/hub/schema/driver-manifest.schema.json -d manifest.json
 ```
