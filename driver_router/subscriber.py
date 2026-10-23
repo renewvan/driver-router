@@ -1,5 +1,5 @@
 """Subscription of the RUT's raw Data to Server topic on the hub bus and
-republish of the mapped, retained properties over the same device's Publisher.
+republish of the mapped, retained properties over the same driver's Publisher.
 
 Thin I/O adapter around paho-mqtt; not unit-tested (see mapping.py for the
 tested seam).

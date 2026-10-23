@@ -1,5 +1,5 @@
 """Persistent MQTT connection to the renewvan bus — the single connection
-this device uses (raw subscribe in, normalized publishes out). LWT on the
+this driver uses (raw subscribe in, normalized publishes out). LWT on the
 router health topic, retained publishes, and callback subscriptions that
 survive reconnects. Same shape as driver-tank's publisher.py.
 """
@@ -13,17 +13,22 @@ from typing import Callable
 import paho.mqtt.client as mqtt
 
 from driver_router.config import MqttConfig
+from driver_router.mapping import router_topic
 
 logger = logging.getLogger(__name__)
 
 HEALTH_TOPIC = "renewvan/router/health"
 INFO_TOPIC = "renewvan/router/info"
+# This Driver's key: equals its `renewvan/<key>/info` segment and the `driver` value
+# every router instance it publishes names (hub schema/router.schema.json).
+DRIVER_KEY = "router"
 
 
 class Publisher:
-    def __init__(self, config: MqttConfig, info: str) -> None:
+    def __init__(self, config: MqttConfig, info: str, router_id: str) -> None:
         self._config = config
         self._info = info
+        self._driver_topic = router_topic(router_id, "driver")
         self._client = mqtt.Client(client_id="driver-router", clean_session=False)
         if config.username:
             self._client.username_pw_set(config.username, config.password)
@@ -41,6 +46,9 @@ class Publisher:
             # Info first, then online: a consumer that sees online always finds info
             # retained. Never cleared on offline or by the will ("last seen vX").
             client.publish(INFO_TOPIC, payload=self._info, qos=1, retain=True)
+            # The router instance names its owning Driver (retained identity field);
+            # the push feed only carries live readings, so it is (re)published here.
+            client.publish(self._driver_topic, payload=json.dumps(DRIVER_KEY), qos=1, retain=True)
             client.publish(HEALTH_TOPIC, payload="online", qos=1, retain=True)
             for topic in self._subscriptions:
                 client.subscribe(topic, qos=1)

@@ -4,7 +4,7 @@ import driver_router.publisher as publisher_module
 from driver_router.config import MqttConfig
 from driver_router.publisher import HEALTH_TOPIC, INFO_TOPIC, Publisher
 
-INFO = '{"device": "router", "version": "v1"}'
+INFO = '{"driver": "router", "version": "v1"}'
 
 
 class FakeClient:
@@ -30,7 +30,7 @@ class FakeClient:
 @pytest.fixture
 def publisher(monkeypatch) -> Publisher:
     monkeypatch.setattr(publisher_module.mqtt, "Client", FakeClient)
-    return Publisher(MqttConfig("localhost", 1883, None, None), info=INFO)
+    return Publisher(MqttConfig("localhost", 1883, None, None), info=INFO, router_id="main")
 
 
 def connect(publisher: Publisher) -> FakeClient:
@@ -42,9 +42,10 @@ def connect(publisher: Publisher) -> FakeClient:
 def test_info_is_published_retained_immediately_before_online(publisher: Publisher) -> None:
     client = connect(publisher)
     # Literal wire topics: the dashboard's uplink icon reads renewvan/router/health
-    # (bare online/offline) until it moves to the device registry, so it must not change.
+    # (bare online/offline) until it moves to the driver registry, so it must not change.
     assert client.published == [
         ("renewvan/router/info", INFO, True),
+        ("renewvan/router/main/driver", '"router"', True),
         ("renewvan/router/health", "online", True),
     ]
 
@@ -53,7 +54,11 @@ def test_info_is_published_again_on_every_reconnect(publisher: Publisher) -> Non
     client = connect(publisher)
     client.published.clear()
     connect(publisher)
-    assert client.published == [(INFO_TOPIC, INFO, True), (HEALTH_TOPIC, "online", True)]
+    assert client.published == [
+        (INFO_TOPIC, INFO, True),
+        ("renewvan/router/main/driver", '"router"', True),
+        (HEALTH_TOPIC, "online", True),
+    ]
 
 
 def test_failed_connect_publishes_nothing(publisher: Publisher) -> None:
@@ -62,10 +67,17 @@ def test_failed_connect_publishes_nothing(publisher: Publisher) -> None:
     assert client.published == []
 
 
-def test_info_is_never_cleared_when_the_device_goes_offline(publisher: Publisher) -> None:
+def test_info_is_never_cleared_when_the_driver_goes_offline(publisher: Publisher) -> None:
     client = connect(publisher)
     client.published.clear()
     publisher.disconnect()
     assert client.published == [(HEALTH_TOPIC, "offline", True)]
     # the broker publishes the last will on an unclean death: offline on health only
     assert client.will == (HEALTH_TOPIC, "offline", True)
+
+
+def test_router_driver_topic_follows_the_configured_router_id(monkeypatch) -> None:
+    monkeypatch.setattr(publisher_module.mqtt, "Client", FakeClient)
+    other = Publisher(MqttConfig("localhost", 1883, None, None), info=INFO, router_id="van2")
+    client = connect(other)
+    assert ("renewvan/router/van2/driver", '"router"', True) in client.published
