@@ -1,8 +1,7 @@
 """Fixture-payload tests for the RUT-360 Data to Server →
 `renewvan/router/<id>/*` mapping — no live broker or router required.
 
-Expected values come from the settled field list
-(`hub/.scratch/node-router/issues/02-settle-router-fields.md`) applied to the
+Expected values come from the settled field list applied to the
 real captured payload, not from re-reading the mapping code.
 """
 

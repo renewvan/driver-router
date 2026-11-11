@@ -2,7 +2,7 @@
 60 s period, Send-as-object form `{input:{…}}`).
 
 `RAW_CAPTURE` is the byte-identical live capture from the router
-(`hub/.scratch/node-router/research/raw-capture.json`, 2026-10-02) — the
+(2026-10-02) — the
 all-members gsm sender form. `RAW_CAPTURE_RESTRICTED` is the steady-state
 production form after the sender was restricted to the settled members.
 """
