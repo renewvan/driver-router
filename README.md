@@ -4,7 +4,7 @@ Teltonika RUT-360 Data to Server MQTT → renewvan-bus router remap. Bridges
 the router's own connectivity feed (RutOS *Data to Server*, server type MQTT)
 onto the shared `renewvan/router/<id>/*` schema — no new sensing, just a
 payload remap, same shape as `driver-battery` but for one broker instead of
-two. Per `hub/.scratch/node-router/map.md`.
+two.
 
 ## One persistent MQTT connection
 

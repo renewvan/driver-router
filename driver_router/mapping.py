@@ -4,8 +4,7 @@ against the live-captured payload (`tests/fixtures/raw-capture.json`).
 
 Source payload is one RutOS "Data to Server" MQTT message, Send-as-object
 form `{input:{…}}` keyed by input name (`gsm`, `mobile_usage`, `uptime`).
-Field list per the settled Router contract
-(`hub/.scratch/node-router/issues/02-settle-router-fields.md`): a source key
+Field list per the settled Router contract: a source key
 that is missing or wrongly typed omits its property — never a fake zero or a
 coerced string.
 """
